@@ -735,6 +735,7 @@
         <div class="field">
           <label>壽險保險金<span id="lbl-insurance"> 0</span></label>
           <input type="text" id="input-insurance" placeholder="實領保險金（元）" oninput="formatNum(this,'insurance')">
+          <div class="hint">💡 保險金不計入遺產總額（所得稅最低稅負制），但超出每人 3,740 萬部分需計入繼承人所得課稅</div>
         </div>
         <div class="field">
           <label>其他資產</label>
@@ -789,6 +790,7 @@
             <div class="result-stat"><div class="val" id="res-eff">-</div><div class="txt">有效税率</div></div>
           </div>
           <div id="res-breakdown"></div>
+          <div id="ins-savings"></div>
           <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
         </div>
 
@@ -1024,6 +1026,32 @@
     _('res-breakdown').innerHTML='<table class="result-table"><tbody>'+
       b.map(r=>'<tr><td>'+r[0]+'</td><td>'+(r[1]>=0?fmt(r[1]):'('+fmt(-r[1])+')')+'</td></tr>').join('')+
       '</tbody></table>'
+
+    // 保險節稅效益分析
+    const insVal=getVal('input-insurance')
+    if(insVal>0){
+      const grossWithoutIns=getVal('input-land')+getVal('input-bld')+getVal('input-cash')+getVal('input-stock')+insVal+getVal('input-other')
+      const netWithoutIns=Math.max(0,grossWithoutIns-total)
+      const taxWithoutIns=netWithoutIns>0?calcTax13(netWithoutIns):0
+      const savings=taxWithoutIns-taxSafe
+      const insExTotal=INS_EX
+      const taxableAfterIns=Math.max(0,insVal-insExTotal)
+      const incomeTaxNote=taxableAfterIns>0?'（超出免稅額 '+fmt(taxableAfterIns)+' 元，計入最低稅負制）':''
+
+      _('ins-savings').innerHTML='<div style="background:linear-gradient(135deg,#0F2B0F,#1A3A1A);border-radius:12px;padding:18px;margin-top:12px;text-align:center;">'+
+        '<div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:10px;">🛡️ 保險隱藏財富・節稅效益分析</div>'+
+        '<div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;">'+
+          '<div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;">沒有保險的遺產稅</div><div style="font-size:20px;color:#FCA5A5;text-decoration:line-through;">'+fmt(taxWithoutIns)+'</div></div>'+
+          '<div style="font-size:24px;color:#4ADE80;align-self:center;">→</div>'+
+          '<div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;">有保險的遺產稅</div><div style="font-size:20px;color:#4ADE80;font-weight:700;">'+fmt(taxSafe)+'</div></div>'+
+          '<div style="font-size:24px;color:#4ADE80;align-self:center;">=</div>'+
+          '<div><div style="font-size:11px;color:rgba(255,255,255,.5);margin-bottom:4px;">節省稅額</div><div style="font-size:22px;color:#FCD34D;font-weight:700;">'+fmt(savings)+'</div></div>'+
+        '</div>'+
+        '<div style="margin-top:10px;font-size:11px;color:rgba(255,255,255,.45);">保險金 '+fmt(insVal)+' 元中，'+fmt(insExTotal)+' 元免稅（'+heirs+'人×3740萬）'+incomeTaxNote+'</div>'+
+      '</div>'
+    }else{
+      _('ins-savings').innerHTML=''
+    }
 
     // 圖表
     if(pieInstance)pieInstance.destroy()
