@@ -958,26 +958,39 @@
     const net=Math.max(0,gross-detailTotal)
     const tax=net>0?calcTax13(net):0
 
+    // 除錯：確保 net 是有效數字
+    console.log('gross:',gross,'detailTotal:',detailTotal,'net:',net,'tax:',tax)
+    const netSafe=Number(net)||0
+    const taxSafe=Number(tax)||0
+
     // 顯示結果
     _('result-area').style.display='block'
     _('placeholder-area').style.display='none'
 
-    // 主要稅額（顯示分段計算過程）
-    if(tax>0){
-      const seg1Amt=Math.min(net,B1)
-      const seg2Amt=Math.max(0,Math.min(net,B2)-B1)
-      const seg3Amt=Math.max(0,net-B2)
+    // 顯示結果
+    _('result-area').style.display='block'
+    _('placeholder-area').style.display='none'
+
+    // 顯示稅額（如果 tax 為 0 但 net > 0 表示計算异常）
+    const displayTax=taxSafe>0?taxSafe:(netSafe>0?calcTax13(netSafe):0)
+    if(taxSafe>0){
+      const seg1Amt=Math.min(netSafe,B1)
+      const seg2Amt=Math.max(0,Math.min(netSafe,B2)-B1)
+      const seg3Amt=Math.max(0,netSafe-B2)
       const seg1Tax=seg1Amt*0.10
       const seg2Tax=seg2Amt*0.15
       const seg3Tax=seg3Amt*0.20
       const totalTax=seg1Tax+seg2Tax+seg3Tax
       _('res-tax').textContent='+'+fmt(totalTax)
+    }else if(netSafe>0){
+      // taxSafe 為 0 但 net>0，异常情况顯示「計算錯誤」
+      _('res-tax').textContent='計算錯誤'
     }else{
       _('res-tax').textContent='0'
     }
 
-    _('res-gross').textContent=fmt(gross)
-    _('res-net').textContent=fmt(net)
+    _('res-gross').textContent=isNaN(gross)?'0':fmt(gross)
+    _('res-net').textContent=isNaN(netSafe)?'0':fmt(netSafe)
 
     // 適用税率（取最高段）
     let rateTxt='10%'
