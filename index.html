@@ -962,14 +962,14 @@
     _('result-area').style.display='block'
     _('placeholder-area').style.display='none'
 
-    // 主要稅額
+    // 主要稅額（顯示分段計算過程）
     if(tax>0){
-      const seg1=Math.min(net,50_000_000)
-      const seg2=Math.max(0,Math.min(net,100_000_000)-50_000_000)
-      const seg3=Math.max(0,net-100_000_000)
-      const seg1Tax=seg1*0.10
-      const seg2Tax=seg2*0.15
-      const seg3Tax=seg3*0.20
+      const seg1Amt=Math.min(net,B1)
+      const seg2Amt=Math.max(0,Math.min(net,B2)-B1)
+      const seg3Amt=Math.max(0,net-B2)
+      const seg1Tax=seg1Amt*0.10
+      const seg2Tax=seg2Amt*0.15
+      const seg3Tax=seg3Amt*0.20
       const totalTax=seg1Tax+seg2Tax+seg3Tax
       _('res-tax').textContent='+'+fmt(totalTax)
     }else{
@@ -981,8 +981,8 @@
 
     // 適用税率（取最高段）
     let rateTxt='10%'
-    if(net>100_000_000) rateTxt='20%'
-    else if(net>50_000_000) rateTxt='15%'
+    if(net>B2) rateTxt='20%'
+    else if(net>B1) rateTxt='15%'
     _('res-rate').textContent=rateTxt
     _('res-eff').textContent=(gross>0?(tax/gross*100).toFixed(2)+'%':'0%')
 
