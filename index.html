@@ -714,11 +714,11 @@
         <h3><span class="icon">📥</span> 遺產總額資料</h3>
         <div class="field-row">
           <div class="field">
-            <label>不動產（土地）<span id="lbl-land">0</span></label>
+            <label>不動產（土地）<span id="lbl-land"> 0</span></label>
             <input type="text" id="input-land" placeholder="土地公告現值（元）" oninput="formatNum(this,'land')">
           </div>
           <div class="field">
-            <label>不動產（建物）<span id="lbl-bld">0</span></label>
+            <label>不動產（建物）<span id="lbl-bld"> 0</span></label>
             <input type="text" id="input-bld" placeholder="房屋課稅現值（元）" oninput="formatNum(this,'bld')">
           </div>
         </div>
@@ -729,7 +729,7 @@
           </div>
           <div class="field">
             <label>上市櫃股票</label>
-            <input type="text" id="input-stock" placeholder="以繼承日收盤價估算（元）" oninput="formatNum(this,'stock')">
+            <input type="text" id="input-stock" placeholder="繼承日收盤價估算（元）" oninput="formatNum(this,'stock')">
           </div>
         </div>
         <div class="field-row">
@@ -743,19 +743,38 @@
           </div>
         </div>
         <div class="field">
-          <label>被繼承人身份</label>
-          <select id="input-type">
-            <option value="standard">一般上班族（標準扣除額 1,200萬）</option>
-            <option value="orphan">無配偶之直系血親卑親屬（扣除 646萬）</option>
-            <option value="public">公教軍警人員 / 特定身心障礙</option>
-          </select>
+          <label>生前債務、喪葬費<span id="lbl-debt"> 0</span></label>
+          <input type="text" id="input-debt" placeholder="填寫金額，喪葬費最高可扣100萬（元）" oninput="formatNum(this,'debt')">
+          <div class="hint">喪葬費扣除上限 100萬（§17Ⅰ十），直接填寫總金額即可</div>
         </div>
-        <div class="field">
-          <label>負債與費用<span id="lbl-debt">0</span></label>
-          <input type="text" id="input-debt" placeholder="生前債務、喪葬費（系統自動取上限150萬）" oninput="formatNum(this,'debt')">
-          <div class="hint">喪葬費扣除上限 150 萬，直接填總金額即可</div>
+
+        <div style="margin-top:8px;padding:16px;background:var(--cream);border-radius:12px;border:1px solid var(--border);">
+          <div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;">👤 被繼承人狀況（影響§17扣除額）</div>
+          <div class="field-row">
+            <div class="field" style="margin-bottom:0;">
+              <label style="font-size:12px;">有配偶（§17Ⅰ一）</label>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+                <label style="display:flex;align-items:center;gap:4px;cursor:pointer;"><input type="checkbox" id="input-spouse" checked style="width:16px;height:16px;"> 是，有配偶</label>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label style="font-size:12px;">直系血親卑親屬人數（§17Ⅰ二）</label>
+              <input type="number" id="input-children" value="0" min="0" style="width:100%;padding:8px 10px;border:1px solid #D1C7A0;border-radius:8px;font-size:14px;background:#fff;color:var(--navy);margin-top:4px;" placeholder="人數">
+            </div>
+          </div>
+          <div class="field-row" style="margin-top:10px;">
+            <div class="field" style="margin-bottom:0;">
+              <label style="font-size:12px;">未成年子女距屆滿成年年數（§17Ⅰ二）</label>
+              <input type="number" id="input-minor" value="0" min="0" style="width:100%;padding:8px 10px;border:1px solid #D1C7A0;border-radius:8px;font-size:14px;background:#fff;color:var(--navy);margin-top:4px;" placeholder="例：3">
+            </div>
+            <div class="field" style="margin-bottom:0;">
+              <label style="font-size:12px;">父母人數（§17Ⅰ三）</label>
+              <input type="number" id="input-parents" value="0" min="0" style="width:100%;padding:8px 10px;border:1px solid #D1C7A0;border-radius:8px;font-size:14px;background:#fff;color:var(--navy);margin-top:4px;" placeholder="人數">
+            </div>
+          </div>
         </div>
-        <button class="btn-calculate" onclick="calcEstate()">⚡ 開始試算</button>
+
+        <button class="btn-calculate" onclick="calcEstate()">⚡ 開始試算（§13税率）</button>
       </div>
 
       <div id="result-area" style="display:none;">
@@ -763,7 +782,7 @@
           <h3>📊 遺產稅試算結果</h3>
           <div class="result-main">
             <span class="amount" id="res-tax">-</span>
-            <div class="label">估計應納遺產稅額</div>
+            <div class="label">估計應納遺產稅額（§13）</div>
           </div>
           <div class="result-detail">
             <div class="result-stat"><div class="val" id="res-gross">-</div><div class="txt">遺產總額</div></div>
@@ -774,84 +793,153 @@
           <div id="res-breakdown"></div>
           <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
         </div>
-        <div class="savings-card">
-          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:6px;">💡 透過保險、或不動產分割規劃，可有效降低課稅淨額</div>
-          <div class="big" id="res-saving">-</div>
-          <div class="sub">預估節稅空間（樂觀估計）</div>
+
+        <div id="deductions-card" class="savings-card" style="background:linear-gradient(135deg,#1A3A1A,#0F2B0F);">
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:8px;">§17 扣除額明細</div>
+          <div id="deductions-list" style="font-size:14px;line-height:2;text-align:left;padding:0 8px;"></div>
         </div>
+
         <div class="warning-box">
-          <strong>⚠️ 重要提醒</strong>
-          本試算結果僅供參考，不作為正式稅務建議。實際申報須依財政部「遺產及贈與稅法」規定，並以國稅局最終核定為準。建議諮詢專業會計師，或至
+          <strong>⚠️ 重要提醒（依遺產及贈與稅法）</strong>
+          本試算結果僅供參考，不作為正式稅務建議。實際扣除額需依國稅局核定為準，例如：配偶扣除額（§17Ⅰ一）需確認婚姻關係、直系血親卑親屬（§17Ⅰ二）之年齡及是否未成年、身心障礙扣除額（§17Ⅰ四）需符合重度身障或嚴重病人認定。詳細規定請諮詢專業會計師或至
           <a href="https://www.etax.nat.gov.tw" target="_blank" style="color:#92400E;font-weight:700;">財政部 eTax 入口網</a>查詢。
+        </div>
+
+        <div style="background:var(--white);border-radius:12px;padding:20px;margin-top:16px;">
+          <div style="font-weight:700;color:var(--navy);font-size:14px;margin-bottom:10px;">📋 遺產稅税率（§13，2026年適用）</div>
+          <table style="width:100%;border-collapse:collapse;font-size:13px;color:#4B5563;">
+            <tr style="border-bottom:1px solid #E5E7EB;"><td>遺產淨額 ≤ 5,000萬</td><td style="text-align:right;color:var(--gold);font-weight:700;">10%</td></tr>
+            <tr style="border-bottom:1px solid #E5E7EB;"><td>5,000萬 ＜ 遺產淨額 ≤ 1億</td><td style="text-align:right;color:var(--gold);font-weight:700;">15%</td><td style="text-align:right;font-size:11px;color:#9CA3AF;">+500萬（基本額）</td></tr>
+            <tr><td>遺產淨額 ＞ 1億</td><td style="text-align:right;color:var(--gold);font-weight:700;">20%</td><td style="text-align:right;font-size:11px;color:#9CA3AF;">+1,250萬（基本額）</td></tr>
+          </table>
         </div>
       </div>
 
       <div id="placeholder-area" class="placeholder-panel">
         <span class="emoji">💰</span>
         <div class="title">輸入遺產資料</div>
-        <div class="sub">填寫左側表單，點擊「開始試算」<br>即可獲得稅額評估與節稅建議</div>
+        <div class="sub">填寫左側表單，點擊「開始試算」<br>即可獲得稅額評估與扣除明細</div>
         <div class="example-box">
           <strong>💡 快速範例：</strong><br>
-          不動產：6,000萬<br>
-          現金：2,000萬<br>
-          股票：1,000萬<br>
-          負債：200萬<br>
-          試算結果 ≈ <span class="ans">1,240萬</span>
+          遺產總額：9,000萬<br>
+          配偶扣除：400萬<br>
+          喪葬費扣除：100萬<br>
+          課稅淨額：8,500萬<br>
+          第一段：5,000萬×10% = 500萬<br>
+          第二段：3,500萬×15% = 525萬<br>
+          稅額合計：<span class="ans">1,025萬</span>
         </div>
       </div>
     </div>
 
-    <!-- 税率級距表（折疊） -->
+    <!-- 詳細扣除額說明（折疊） -->
     <details style="margin-top:28px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;">
-      <summary style="font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;user-select:none;">📋 我國遺產稅級距（2026年適用）</summary>
-      <table class="result-table" style="margin-top:12px;color:var(--navy);">
-        <tr><td>遺產淨額 0 ～ 5,000萬</td><td>税率 2%</td></tr>
-        <tr><td>5,000萬 ～ 1億</td><td>税率 4%（累進差額 100萬）</td></tr>
-        <tr><td>1億 ～ 2億</td><td>税率 7%（累進差額 140萬）</td></tr>
-        <tr><td>2億 ～ 4億</td><td>税率 10%（累進差額 210萬）</td></tr>
-        <tr><td>4億 ～ 6億</td><td>税率 13%（累進差額 410萬）</td></tr>
-        <tr><td>6億 ～ 9億</td><td>税率 15%（累進差額 610萬）</td></tr>
-        <tr><td>9億 ～ 14億</td><td>税率 18%（累進差額 1,060萬）</td></tr>
-        <tr><td>14億以上</td><td>税率 20%（累進差額 1,960萬）</td></tr>
-      </table>
-      <div style="margin-top:10px;font-size:12px;color:#6B7280;">*累進差額制：稅額 = 遺產淨額×税率 − 累進差額</div>
+      <summary style="font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;user-select:none;">📖 §17 扣除額規定摘要（官方資料）</summary>
+      <div style="margin-top:14px;font-size:13px;color:#4B5563;line-height:2;">
+        <div style="margin-bottom:12px;padding:12px;background:var(--cream);border-radius:8px;">
+          <strong style="color:var(--navy);">§17Ⅰ 一、</strong>配偶扣除額 <strong style="color:var(--gold);">400萬</strong>
+        </div>
+        <div style="margin-bottom:12px;padding:12px;background:var(--cream);border-radius:8px;">
+          <strong style="color:var(--navy);">§17Ⅰ 二、</strong>直系血親卑親屬每人 <strong style="color:var(--gold);">40萬</strong>；未成年者，每年加扣 <strong style="color:var(--gold);">40萬</strong>（距屆滿成年年數）
+        </div>
+        <div style="margin-bottom:12px;padding:12px;background:var(--cream);border-radius:8px;">
+          <strong style="color:var(--navy);">§17Ⅰ 三、</strong>父母每人扣除 <strong style="color:var(--gold);">100萬</strong>
+        </div>
+        <div style="margin-bottom:12px;padding:12px;background:var(--cream);border-radius:8px;">
+          <strong style="color:var(--navy);">§17Ⅰ 四、</strong>重度身心障礙者/嚴重病人再加扣 <strong style="color:var(--gold);">500萬</strong>
+        </div>
+        <div style="margin-bottom:12px;padding:12px;background:var(--cream);border-radius:8px;">
+          <strong style="color:var(--navy);">§17Ⅰ 五、</strong>受撫養之兄弟姊妹、祖父母每人 <strong style="color:var(--gold);">40萬</strong>；未成年者每年加扣40萬
+        </div>
+        <div style="margin-bottom:12px;padding:12px;background:var(--cream);border-radius:8px;">
+          <strong style="color:var(--navy);">§17Ⅰ 十、</strong>喪葬費扣除上限 <strong style="color:var(--gold);">100萬</strong>
+        </div>
+        <div style="margin-top:12px;font-size:12px;color:#9CA3AF;">* §17Ⅰ 六（農業用地）、七（死亡前六年內繼承財產）、八（稅捐）、九（債務）、十一（遺產管理費用）需個案認定，本工具預設以喪葬費為主要扣除項目。</div>
+      </div>
     </details>
   </section>
 
   <script>
   function _(id){return document.getElementById(id)}
 
-  // 格式化數字（每3位加逗號）
   function fmt(n){return Math.round(Number(n)).toLocaleString('zh-TW')}
 
-  // 即時顯示標籤值
   function formatNum(el,key){
     let v=el.value.replace(/,/g,'').replace(/\D/g,'')
     el.value=v.replace(/\B(?=(\d{3})+(?!\d))/g,',')
     _('lbl-'+key).textContent=v?(' '+fmt(v)):' 0'
   }
 
-  // 台灣遺產稅計算（累進差額制）
-  function calcInheritanceTax(taxable){
-    const brackets=[
-      [50_000_000,0.02,0],
-      [100_000_000,0.04,1_000_000],
-      [200_000_000,0.07,1_400_000],
-      [400_000_000,0.10,2_100_000],
-      [600_000_000,0.13,4_100_000],
-      [900_000_000,0.15,6_100_000],
-      [1_400_000_000,0.18,10_600_000],
-      [Infinity,0.20,19_600_000],
-    ]
-    for(let i=0;i<brackets.length;i++){
-      if(taxable<=brackets[i][0]){
-        return taxable*brackets[i][1]-brackets[i][2]
-      }
+  // §13 三級累進税率（無累進差額）
+  function calcTax13(taxable){
+    if(taxable<=50_000_000){
+      return taxable*0.10
+    }else if(taxable<=100_000_000){
+      return 5_000_000+(taxable-50_000_000)*0.15
+    }else{
+      return 12_500_000+(taxable-100_000_000)*0.20
     }
   }
 
-  // 讀取輸入值
+  // §18 免稅額：境內中華民國國民 1,200萬（軍警公教執行職務死亡加倍）
+  const TAX_FREE=12_000_000
+
+  // §17 各項扣除額（預設值，可由使用者調整）
+  const DEDUCTIONS={
+    spouse:4_000_000,        // §17Ⅰ一 配偶
+    child:400_000,           // §17Ⅰ二 每人
+    childMinorExtra:400_000, // §17Ⅰ二 未成年每年加扣
+    parent:1_000_000,        // §17Ⅰ三 每人
+    disability:5_000_000,    // §17Ⅰ四 重度身障/嚴重病人
+    sibling:400_000,         // §17Ⅰ五 每人
+    funeral:1_000_000,        // §17Ⅰ十 喪葬費上限100萬
+  }
+
   function getVal(id){return Number(_(id).value.replace(/,/g,''))||0}
+
+  // 簡化的扣除額計算（標準假設）
+  function calcDeductions(){
+    const children=Math.max(0,parseInt(_('input-children').value)||0)
+    const minorYears=Math.max(0,parseInt(_('input-minor').value)||0)
+    const parents=Math.max(0,parseInt(_('input-parents').value)||0)
+    const funeral=getVal('input-debt') // 使用者輸入的債務含喪葬費
+    const spouseYes=_('input-spouse').checked
+
+    let total=0, details=[]
+
+    // 配偶 §17Ⅰ一
+    if(spouseYes){
+      total+=DEDUCTIONS.spouse
+      details.push({label:'配偶扣除額 §17Ⅰ一',val:DEDUCTIONS.spouse,note:'400萬'})
+    }
+
+    // 直系血親卑親屬 §17Ⅰ二
+    if(children>0){
+      const childBase=children*DEDUCTIONS.child
+      const minorExtra=minorYears*DEDUCTIONS.childMinorExtra
+      const sub=childBase+minorExtra
+      total+=sub
+      details.push({label:'直系血親卑親屬 §17Ⅰ二',val:sub,
+        note:children+'人×40萬'+(minorExtra>0?' + 未成年加扣'+fmt(minorExtra):'')})
+    }
+
+    // 父母 §17Ⅰ三
+    if(parents>0){
+      const sub=parents*DEDUCTIONS.parent
+      total+=sub
+      details.push({label:'父母扣除額 §17Ⅰ三',val:sub,note:parents+'人×100萬'})
+    }
+
+    // 喪葬費 §17Ⅰ十（取實際金額與上限100萬之最小值）
+    const funeralDeduct=Math.min(funeral,DEDUCTIONS.funeral)
+    if(funeralDeduct>0){
+      total+=funeralDeduct
+      details.push({label:'喪葬費扣除 §17Ⅰ十',val:funeralDeduct,
+        note:'min(填寫金額,'+fmt(DEDUCTIONS.funeral)+')'})
+    }
+
+    return{total,details}
+  }
 
   let pieInstance=null
 
@@ -859,43 +947,65 @@
     const gross=getVal('input-land')+getVal('input-bld')+getVal('input-cash')+getVal('input-stock')+getVal('input-insurance')+getVal('input-other')
     if(gross<=0){alert('請輸入遺產資料');return}
 
-    const deduct=[1200_000,646_000,0][_('input-type').selectedIndex]
-    const debt=Math.min(getVal('input-debt'),1_500_000) // 喪葬費上限150萬
-    const net=Math.max(0,gross-deduct-debt)
-    const tax=net>0?calcInheritanceTax(net):0
+    const{detailTotal,details}=calcDeductions()
+    const net=Math.max(0,gross-detailTotal)
+    const tax=net>0?calcTax13(net):0
 
     // 顯示結果
     _('result-area').style.display='block'
     _('placeholder-area').style.display='none'
-    _('res-tax').textContent=tax>0?('+'+fmt(tax)):0
+
+    // 主要稅額
+    if(tax>0){
+      const seg1=Math.min(net,50_000_000)
+      const seg2=Math.max(0,Math.min(net,100_000_000)-50_000_000)
+      const seg3=Math.max(0,net-100_000_000)
+      const seg1Tax=seg1*0.10
+      const seg2Tax=seg2*0.15
+      const seg3Tax=seg3*0.20
+      const totalTax=seg1Tax+seg2Tax+seg3Tax
+      _('res-tax').textContent='+'+fmt(totalTax)
+    }else{
+      _('res-tax').textContent='0'
+    }
+
     _('res-gross').textContent=fmt(gross)
     _('res-net').textContent=fmt(net)
-    _('res-rate').textContent=(net>0?(tax/net*100).toFixed(1):0)+'%'
-    _('res-eff').textContent=(gross>0?(tax/gross*100).toFixed(2)+'%':'0%')
-    _('res-saving').textContent=tax>0?('約 '+fmt(Math.round(tax*0.05))+' 元'):'無明顯節稅空間'
 
-    // 級距明細
-    const breakdowns=[
-      ['不動產',getVal('input-land')+getVal('input-bld')],
-      ['現金存款',getVal('input-cash')],
-      ['上市櫃股票',getVal('input-stock')],
-      ['壽險保險金',getVal('input-insurance')],
-      ['其他資產',getVal('input-other')],
-      ['扣除項目',-(deduct+debt)],
-    ].filter(r=>r[1]!==0)
+    // 適用税率（取最高段）
+    let rateTxt='10%'
+    if(net>100_000_000) rateTxt='20%'
+    else if(net>50_000_000) rateTxt='15%'
+    _('res-rate').textContent=rateTxt
+    _('res-eff').textContent=(gross>0?(tax/gross*100).toFixed(2)+'%':'0%')
+
+    // 扣除額明細
+    const deductionRows=details.map(d=>'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);"><span>'+d.label+'</span><span style="color:var(--gold);">'+fmt(d.val)+'</span></div>').join('')
+    const deductionTotalHtml=details.length>0
+      ?'<div style="border-top:2px solid rgba(255,255,255,.2);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;"><span>扣除額合計</span><span style="color:var(--gold);">-'+fmt(detailTotal)+'</span></div>'
+      :'<div style="color:rgba(255,255,255,.5);font-size:13px;padding-top:8px;">※ 請填寫上方「被繼承人狀況」以計算扣除額</div>'
+    _('deductions-list').innerHTML=deductionRows+deductionTotalHtml
+
+    // 資產明細
+    const b=[]
+    const landVal=getVal('input-land')+getVal('input-bld')
+    if(landVal>0) b.push(['不動產',landVal])
+    if(getVal('input-cash')>0) b.push(['現金存款',getVal('input-cash')])
+    if(getVal('input-stock')>0) b.push(['上市櫃股票',getVal('input-stock')])
+    if(getVal('input-insurance')>0) b.push(['壽險保險金',getVal('input-insurance')])
+    if(getVal('input-other')>0) b.push(['其他資產',getVal('input-other')])
+    if(detailTotal>0) b.push(['扣除項目',-detailTotal])
+
     _('res-breakdown').innerHTML='<table class="result-table"><tbody>'+
-      breakdowns.map(r=>'<tr><td>'+r[0]+'</td><td>'+(r[1]>=0?fmt(r[1]):'('+fmt(-r[1])+')')+'</td></tr>').join('')+
+      b.map(r=>'<tr><td>'+r[0]+'</td><td>'+(r[1]>=0?fmt(r[1]):'('+fmt(-r[1])+')')+'</td></tr>').join('')+
       '</tbody></table>'
 
     // 圖表
     if(pieInstance)pieInstance.destroy()
     const ctx=_('pieChart').getContext('2d')
-    const labels=breakdowns.map(r=>r[0])
-    const data=breakdowns.map(r=>Math.abs(r[1]))
-    const colors=['#C9A84C','#0F1C3F','#1A2F5E','#E8D5A3','#6B7280','#22C55E']
     pieInstance=new Chart(ctx,{
       type:'pie',
-      data:{labels, datasets:[{data,backgroundColor:colors.slice(0,labels.length),borderWidth:0}]},
+      data:{labels:b.map(r=>r[0]),datasets:[{data:b.map(r=>Math.abs(r[1])),backgroundColor:['#C9A84C','#0F1C3F','#1A2F5E','#E8D5A3','#6B7280','#22C55E'],borderWidth:0}]},
       options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:12},color:'rgba(255,255,255,0.7)'}}}}
     })
   }
