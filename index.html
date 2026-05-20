@@ -655,6 +655,252 @@
     </div>
   </section>
 
+  <!-- 遺產稅計算機 -->
+  <section class="section" id="calculator">
+    <div class="section-header">
+      <div class="section-num" style="background:var(--gold);color:var(--navy);">⚡</div>
+      <div>
+        <div class="section-title">遺產稅試算</div>
+        <div class="section-sub">遺產淨額 × 級距税率 → 快速估算應納稅額</div>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      .calc-wrap{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+      @media(max-width:768px){.calc-wrap{grid-template-columns:1fr;}}
+      .calc-panel{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:28px;}
+      .calc-panel h3{font-size:16px;font-weight:700;color:var(--navy);margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+      .calc-panel h3 .icon{font-size:20px;}
+      .field{margin-bottom:14px;}
+      .field label{font-size:12px;color:#6B7280;display:flex;justify-content:space-between;margin-bottom:5px;}
+      .field label span{color:var(--gold);font-weight:600;}
+      .field input,.field select{width:100%;padding:10px 14px;border:1px solid #D1C7A0;border-radius:10px;font-size:15px;font-family:inherit;background:#FDF8EE;color:var(--navy);outline:none;transition:border .2s;}
+      .field input:focus,.field select:focus{border-color:var(--gold);}
+      .field input::placeholder{color:#BFB87A;}
+      .field .hint{font-size:11px;color:#9CA3AF;margin-top:3px;}
+      .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+      .btn-calculate{width:100%;padding:14px;background:var(--navy);color:var(--gold);border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:background .2s;margin-top:4px;}
+      .btn-calculate:hover{background:var(--navy-light);}
+      .result-box{background:var(--navy);border-radius:16px;padding:28px;color:var(--white);margin-top:24px;}
+      .result-box h3{color:var(--gold);font-size:16px;font-weight:700;margin-bottom:16px;}
+      .result-main{text-align:center;padding:20px 0;}
+      .result-main .amount{font-size:42px;font-weight:900;color:var(--gold);display:block;line-height:1.2;}
+      .result-main .label{font-size:13px;color:rgba(255,255,255,.6);margin-top:4px;}
+      .result-detail{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+      .result-stat{background:rgba(255,255,255,.07);border-radius:10px;padding:14px;text-align:center;}
+      .result-stat .val{font-size:20px;font-weight:700;color:var(--gold);}
+      .result-stat .txt{font-size:12px;color:rgba(255,255,255,.5);margin-top:2px;}
+      .result-table{width:100%;border-collapse:collapse;font-size:13px;color:rgba(255,255,255,.7);}
+      .result-table tr{border-bottom:1px solid rgba(255,255,255,.08);}
+      .result-table td{padding:8px 4px;}
+      .result-table td:last-child{text-align:right;color:var(--gold);font-weight:600;}
+      .chart-wrap{height:200px;margin-top:16px;}
+      .warning-box{background:#FEF3C7;border:1px solid #F59E0B;border-radius:10px;padding:14px;font-size:12px;color:#92400E;margin-top:16px;line-height:1.7;}
+      .warning-box strong{display:block;margin-bottom:4px;}
+      .savings-card{background:linear-gradient(135deg,var(--navy),#1A2F5E);border-radius:16px;padding:24px;color:var(--white);margin-top:16px;text-align:center;}
+      .savings-card .big{font-size:32px;font-weight:900;color:var(--gold);}
+      .savings-card .sub{font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;}
+      .placeholder-panel{grid-column:2;display:flex;flex-direction:column;justify-content:center;align-items:center;min-height:480px;text-align:center;border-radius:16px;background:var(--white);border:1px solid var(--border);padding:28px;}
+      @media(max-width:768px){.placeholder-panel{grid-column:1;min-height:300px;}}
+      .placeholder-panel .emoji{font-size:56px;display:block;margin-bottom:14px;}
+      .placeholder-panel .title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:8px;}
+      .placeholder-panel .sub{font-size:14px;color:#9CA3AF;line-height:1.7;}
+      .example-box{background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:20px;text-align:left;font-size:13px;color:#6B7280;max-width:260px;line-height:1.8;}
+      .example-box strong{color:var(--navy);}
+      .example-box .ans{color:var(--gold);font-weight:700;}
+    </style>
+    <div class="calc-wrap">
+      <div class="calc-panel">
+        <h3><span class="icon">📥</span> 遺產總額資料</h3>
+        <div class="field-row">
+          <div class="field">
+            <label>不動產（土地）<span id="lbl-land">0</span></label>
+            <input type="text" id="input-land" placeholder="土地公告現值（元）" oninput="formatNum(this,'land')">
+          </div>
+          <div class="field">
+            <label>不動產（建物）<span id="lbl-bld">0</span></label>
+            <input type="text" id="input-bld" placeholder="房屋課稅現值（元）" oninput="formatNum(this,'bld')">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>現金及存款</label>
+            <input type="text" id="input-cash" placeholder="庫存現金、存款（元）" oninput="formatNum(this,'cash')">
+          </div>
+          <div class="field">
+            <label>上市櫃股票</label>
+            <input type="text" id="input-stock" placeholder="以繼承日收盤價估算（元）" oninput="formatNum(this,'stock')">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>壽險保險金</label>
+            <input type="text" id="input-insurance" placeholder="人壽保險要約、保險金（元）" oninput="formatNum(this,'insurance')">
+          </div>
+          <div class="field">
+            <label>其他資產</label>
+            <input type="text" id="input-other" placeholder="古董、珠寶、債權等（元）" oninput="formatNum(this,'other')">
+          </div>
+        </div>
+        <div class="field">
+          <label>被繼承人身份</label>
+          <select id="input-type">
+            <option value="standard">一般上班族（標準扣除額 1,200萬）</option>
+            <option value="orphan">無配偶之直系血親卑親屬（扣除 646萬）</option>
+            <option value="public">公教軍警人員 / 特定身心障礙</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>負債與費用<span id="lbl-debt">0</span></label>
+          <input type="text" id="input-debt" placeholder="生前債務、喪葬費（系統自動取上限150萬）" oninput="formatNum(this,'debt')">
+          <div class="hint">喪葬費扣除上限 150 萬，直接填總金額即可</div>
+        </div>
+        <button class="btn-calculate" onclick="calcEstate()">⚡ 開始試算</button>
+      </div>
+
+      <div id="result-area" style="display:none;">
+        <div class="result-box">
+          <h3>📊 遺產稅試算結果</h3>
+          <div class="result-main">
+            <span class="amount" id="res-tax">-</span>
+            <div class="label">估計應納遺產稅額</div>
+          </div>
+          <div class="result-detail">
+            <div class="result-stat"><div class="val" id="res-gross">-</div><div class="txt">遺產總額</div></div>
+            <div class="result-stat"><div class="val" id="res-net">-</div><div class="txt">課稅遺產淨額</div></div>
+            <div class="result-stat"><div class="val" id="res-rate">-</div><div class="txt">適用税率</div></div>
+            <div class="result-stat"><div class="val" id="res-eff">-</div><div class="txt">有效税率</div></div>
+          </div>
+          <div id="res-breakdown"></div>
+          <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+        </div>
+        <div class="savings-card">
+          <div style="font-size:12px;color:rgba(255,255,255,.6);margin-bottom:6px;">💡 透過保險、或不動產分割規劃，可有效降低課稅淨額</div>
+          <div class="big" id="res-saving">-</div>
+          <div class="sub">預估節稅空間（樂觀估計）</div>
+        </div>
+        <div class="warning-box">
+          <strong>⚠️ 重要提醒</strong>
+          本試算結果僅供參考，不作為正式稅務建議。實際申報須依財政部「遺產及贈與稅法」規定，並以國稅局最終核定為準。建議諮詢專業會計師，或至
+          <a href="https://www.etax.nat.gov.tw" target="_blank" style="color:#92400E;font-weight:700;">財政部 eTax 入口網</a>查詢。
+        </div>
+      </div>
+
+      <div id="placeholder-area" class="placeholder-panel">
+        <span class="emoji">💰</span>
+        <div class="title">輸入遺產資料</div>
+        <div class="sub">填寫左側表單，點擊「開始試算」<br>即可獲得稅額評估與節稅建議</div>
+        <div class="example-box">
+          <strong>💡 快速範例：</strong><br>
+          不動產：6,000萬<br>
+          現金：2,000萬<br>
+          股票：1,000萬<br>
+          負債：200萬<br>
+          試算結果 ≈ <span class="ans">1,240萬</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 税率級距表（折疊） -->
+    <details style="margin-top:28px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;">
+      <summary style="font-size:14px;font-weight:700;color:var(--navy);cursor:pointer;user-select:none;">📋 我國遺產稅級距（2026年適用）</summary>
+      <table class="result-table" style="margin-top:12px;color:var(--navy);">
+        <tr><td>遺產淨額 0 ～ 5,000萬</td><td>税率 2%</td></tr>
+        <tr><td>5,000萬 ～ 1億</td><td>税率 4%（累進差額 100萬）</td></tr>
+        <tr><td>1億 ～ 2億</td><td>税率 7%（累進差額 140萬）</td></tr>
+        <tr><td>2億 ～ 4億</td><td>税率 10%（累進差額 210萬）</td></tr>
+        <tr><td>4億 ～ 6億</td><td>税率 13%（累進差額 410萬）</td></tr>
+        <tr><td>6億 ～ 9億</td><td>税率 15%（累進差額 610萬）</td></tr>
+        <tr><td>9億 ～ 14億</td><td>税率 18%（累進差額 1,060萬）</td></tr>
+        <tr><td>14億以上</td><td>税率 20%（累進差額 1,960萬）</td></tr>
+      </table>
+      <div style="margin-top:10px;font-size:12px;color:#6B7280;">*累進差額制：稅額 = 遺產淨額×税率 − 累進差額</div>
+    </details>
+  </section>
+
+  <script>
+  function _(id){return document.getElementById(id)}
+
+  // 格式化數字（每3位加逗號）
+  function fmt(n){return Math.round(Number(n)).toLocaleString('zh-TW')}
+
+  // 即時顯示標籤值
+  function formatNum(el,key){
+    let v=el.value.replace(/,/g,'').replace(/\D/g,'')
+    el.value=v.replace(/\B(?=(\d{3})+(?!\d))/g,',')
+    _('lbl-'+key).textContent=v?(' '+fmt(v)):' 0'
+  }
+
+  // 台灣遺產稅計算（累進差額制）
+  function calcInheritanceTax(taxable){
+    const brackets=[
+      [50_000_000,0.02,0],
+      [100_000_000,0.04,1_000_000],
+      [200_000_000,0.07,1_400_000],
+      [400_000_000,0.10,2_100_000],
+      [600_000_000,0.13,4_100_000],
+      [900_000_000,0.15,6_100_000],
+      [1_400_000_000,0.18,10_600_000],
+      [Infinity,0.20,19_600_000],
+    ]
+    for(let i=0;i<brackets.length;i++){
+      if(taxable<=brackets[i][0]){
+        return taxable*brackets[i][1]-brackets[i][2]
+      }
+    }
+  }
+
+  // 讀取輸入值
+  function getVal(id){return Number(_(id).value.replace(/,/g,''))||0}
+
+  let pieInstance=null
+
+  function calcEstate(){
+    const gross=getVal('input-land')+getVal('input-bld')+getVal('input-cash')+getVal('input-stock')+getVal('input-insurance')+getVal('input-other')
+    if(gross<=0){alert('請輸入遺產資料');return}
+
+    const deduct=[1200_000,646_000,0][_('input-type').selectedIndex]
+    const debt=Math.min(getVal('input-debt'),1_500_000) // 喪葬費上限150萬
+    const net=Math.max(0,gross-deduct-debt)
+    const tax=net>0?calcInheritanceTax(net):0
+
+    // 顯示結果
+    _('result-area').style.display='block'
+    _('placeholder-area').style.display='none'
+    _('res-tax').textContent=tax>0?('+'+fmt(tax)):0
+    _('res-gross').textContent=fmt(gross)
+    _('res-net').textContent=fmt(net)
+    _('res-rate').textContent=(net>0?(tax/net*100).toFixed(1):0)+'%'
+    _('res-eff').textContent=(gross>0?(tax/gross*100).toFixed(2)+'%':'0%')
+    _('res-saving').textContent=tax>0?('約 '+fmt(Math.round(tax*0.05))+' 元'):'無明顯節稅空間'
+
+    // 級距明細
+    const breakdowns=[
+      ['不動產',getVal('input-land')+getVal('input-bld')],
+      ['現金存款',getVal('input-cash')],
+      ['上市櫃股票',getVal('input-stock')],
+      ['壽險保險金',getVal('input-insurance')],
+      ['其他資產',getVal('input-other')],
+      ['扣除項目',-(deduct+debt)],
+    ].filter(r=>r[1]!==0)
+    _('res-breakdown').innerHTML='<table class="result-table"><tbody>'+
+      breakdowns.map(r=>'<tr><td>'+r[0]+'</td><td>'+(r[1]>=0?fmt(r[1]):'('+fmt(-r[1])+')')+'</td></tr>').join('')+
+      '</tbody></table>'
+
+    // 圖表
+    if(pieInstance)pieInstance.destroy()
+    const ctx=_('pieChart').getContext('2d')
+    const labels=breakdowns.map(r=>r[0])
+    const data=breakdowns.map(r=>Math.abs(r[1]))
+    const colors=['#C9A84C','#0F1C3F','#1A2F5E','#E8D5A3','#6B7280','#22C55E']
+    pieInstance=new Chart(ctx,{
+      type:'pie',
+      data:{labels, datasets:[{data,backgroundColor:colors.slice(0,labels.length),borderWidth:0}]},
+      options:{responsive:true,plugins:{legend:{position:'bottom',labels:{font:{size:12},color:'rgba(255,255,255,0.7)'}}}}
+    })
+  }
+  </script>
+
   <!-- CTA -->
   <section class="cta-section">
     <h2>立即行動</h2>
