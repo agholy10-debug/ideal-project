@@ -954,8 +954,8 @@
     const gross=getVal('input-land')+getVal('input-bld')+getVal('input-cash')+getVal('input-stock')+getVal('input-insurance')+getVal('input-other')
     if(gross<=0){alert('請輸入遺產資料');return}
 
-    const{detailTotal,details}=calcDeductions()
-    const net=Math.max(0,gross-detailTotal)
+    const{total,details}=calcDeductions()
+    const net=Math.max(0,gross-total)
     const tax=net>0?calcTax13(net):0
 
     // 除錯：確保 net 是有效數字
@@ -1002,7 +1002,7 @@
     // 扣除額明細
     const deductionRows=details.map(d=>'<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);"><span>'+d.label+'</span><span style="color:var(--gold);">'+fmt(d.val)+'</span></div>').join('')
     const deductionTotalHtml=details.length>0
-      ?'<div style="border-top:2px solid rgba(255,255,255,.2);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;"><span>扣除額合計</span><span style="color:var(--gold);">-'+fmt(detailTotal)+'</span></div>'
+? '<div style="border-top:2px solid rgba(255,255,255,.2);margin-top:8px;padding-top:10px;display:flex;justify-content:space-between;font-weight:700;"><span>扣除額合計</span><span style="color:var(--gold);">-'+fmt(total)+'</span></div>'
       :'<div style="color:rgba(255,255,255,.5);font-size:13px;padding-top:8px;">※ 請填寫上方「被繼承人狀況」以計算扣除額</div>'
     _('deductions-list').innerHTML=deductionRows+deductionTotalHtml
 
