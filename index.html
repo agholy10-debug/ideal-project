@@ -952,7 +952,7 @@
   function calcEstate(){
     const heirs=(getVal('input-spouse')?1:0)+getVal('input-children')
     const INS_EX=37_400_000*heirs
-    const gross=getVal('input-land')+getVal('input-bld')+getVal('input-cash')+getVal('input-stock')+Math.max(0,getVal('input-insurance')-INS_EX)+getVal('input-other')
+    const gross=getVal('input-land')+getVal('input-bld')+getVal('input-cash')+getVal('input-stock')+getVal('input-other')
     if(gross<=0){alert('請輸入遺產資料');return}
 
     const{total,details}=calcDeductions()
@@ -1014,10 +1014,9 @@
     if(getVal('input-cash')>0) b.push(['現金存款',getVal('input-cash')])
     if(getVal('input-stock')>0) b.push(['上市櫃股票',getVal('input-stock')])
     if(getVal('input-insurance')>0){
-      const insTaxable=Math.max(0,getVal('input-insurance')-INS_EX)
-      b.push(['壽險保險金 (實領)',getVal('input-insurance')])
-      b.push(['壽險免稅額 ('+heirs+'人)',-INS_EX])
-      b.push(['壽險計入遺產',insTaxable])
+      b.push(['壽險保險金 (不計入遺產)',0])
+      b.push(['每人所得免稅額 ('+heirs+'人)',INS_EX])
+      b.push(['保險金計入繼承人所得','(併入最低稅負制)'])
     }
     if(getVal('input-other')>0) b.push(['其他資產',getVal('input-other')])
     if(total>0) b.push(['扣除項目',-total])
