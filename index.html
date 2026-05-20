@@ -866,7 +866,8 @@
   function formatNum(el,key){
     let v=el.value.replace(/,/g,'').replace(/\D/g,'')
     el.value=v.replace(/\B(?=(\d{3})+(?!\d))/g,',')
-    _('lbl-'+key).textContent=v?(' '+fmt(v)):' 0'
+    let lbl=_('lbl-'+key)
+    if(lbl) lbl.textContent=v?(' '+fmt(v)):' 0'
   }
 
   // §13 三級累進税率（2026年適用，單位：元）
@@ -959,7 +960,7 @@
     const tax=net>0?calcTax13(net):0
 
     // 除錯：確保 net 是有效數字
-    console.log('gross:',gross,'detailTotal:',detailTotal,'net:',net,'tax:',tax)
+    console.log('gross:',gross,'total:',total,'net:',net,'tax:',tax)
     const netSafe=Number(net)||0
     const taxSafe=Number(tax)||0
 
@@ -1014,7 +1015,7 @@
     if(getVal('input-stock')>0) b.push(['上市櫃股票',getVal('input-stock')])
     if(getVal('input-insurance')>0) b.push(['壽險保險金',getVal('input-insurance')])
     if(getVal('input-other')>0) b.push(['其他資產',getVal('input-other')])
-    if(detailTotal>0) b.push(['扣除項目',-detailTotal])
+    if(total>0) b.push(['扣除項目',-total])
 
     _('res-breakdown').innerHTML='<table class="result-table"><tbody>'+
       b.map(r=>'<tr><td>'+r[0]+'</td><td>'+(r[1]>=0?fmt(r[1]):'('+fmt(-r[1])+')')+'</td></tr>').join('')+
